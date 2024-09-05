@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         v2ex AI 回答问题
 // @namespace    https://github.com/falconchen/scripts
-// @version      0.1.2
-// @description  实现 AI 回答 v2ex 帖子中的问题，可使用 deepseek 或其他与openai api对齐的LLM，会保留缓存记录到本地避免大量消耗 token。从 https://github.com/dlzmoe/scripts的v2ex AI 总结帖子脚本 修改而来
+// @version      0.1.5
+// @description  实现 AI 回答 v2ex 帖子中的问题，可使用 deepseek 或其他与openai api对齐的LLM，会保留缓存记录到本地避免大量消耗 token。从 https://github.com/dlzmoe/scripts的v2ex AI 总结帖子脚本 修改而来 https://greasyfork.org/zh-CN/users/741071-falconchen
 // @author       falconchen
 // @match        *://v2ex.com/*
 // @match        *://*.v2ex.com/*
@@ -154,34 +154,41 @@
   // 获取帖子内容
   function getPostContent() {
     var v2exaianswerAPI = JSON.parse(localStorage.getItem('v2exaianswerAPI'));
-    
+
     // 检查是否已配置API信息
     if (!v2exaianswerAPI || !v2exaianswerAPI.apikey || !v2exaianswerAPI.baseurl || !v2exaianswerAPI.model) {
       // 如果未配置,弹出设置窗口
       setApiConfig(getPostContent);
       return;
     }
-    
+
     $('.gpt-answer-wrap').show();
     return new Promise((resolve, reject) => {
-      const topic_title = $('h1').html();
-      const topic_content = $('div.topic_content').html();
+      const topic_title = $('h1').text();
+      const topic_content = $('div.topic_content').text();
 
-      const v2exprompt = `你是一位智能AI助手。请仔细阅读以下由三重引号分隔的文本,其中包含一个问题或讨论主题。你的任务是:
+      const allReplies = getAllReplies();
+      const repliesText = allReplies.map(reply => `${reply.username} (赞赏: ${reply.likes}): ${reply.content}`).join('\n\n');
+
+      const v2exprompt = `请仔细阅读以下由三重引号分隔的文本,其中涉及一个问题或讨论主题以及相关回复，用简单明了的话来回答里面可能提及的问题。
 
 1. 识别文本中的主要问题或讨论点
-2. 提供一个全面、有见地且有帮助的回答
-3. 如果有多个问题,请逐一回答
-4. 如果问题不明确,请尝试理解潜在的意图并给出最佳回答
-5. 回答应该简洁、准确,并尽可能提供有用的信息或建议
+2. 如果问题不明确,请尝试理解潜在的意图并给出最佳回答
+3. 权衡有价值的回复或建设性意见,特别关注获得高赞赏的回复
+4. 不要翻译问题
+5. 不要用引号把回答包起来
 
-请用简体中文回答。不要重复问题,直接给出回答。
+ 请用简体中文回答。不要重复问题,直接给出回答。
 
 """
 标题: ${topic_title}
 内容: ${topic_content}
+
+回复 (按赞赏数降序排列):
+${repliesText}
 """
 `;
+console.log(v2exprompt);
 
       fetch(`${v2exaianswerAPI.baseurl}/v1/chat/completions`, {
           method: "POST",
@@ -269,6 +276,37 @@
       getPostContent();
     })
   }
+
+  function getAllReplies() {
+    const replies = [];
+    $('div[id^="r_"]').each(function() {
+      const $reply = $(this);
+      const username = $reply.find('a[href^="/member"]').text();
+      const content = $reply.find('div.reply_content').text();
+
+      // 获取赞赏数
+      let likes = 0;
+      const $likeSpan = $reply.find('span.small.fade img[src*="heart_neue_red.png"]').parent();
+      if ($likeSpan.length > 0) {
+        likes = parseInt($likeSpan.text().trim(), 10) || 0;
+      }
+
+      replies.push({
+        username: username,
+        content: content,
+        likes: likes
+      });
+    });
+
+    // 按赞赏数降序排序
+    replies.sort((a, b) => b.likes - a.likes);
+
+    return replies;
+  }
+
+  // 使用示例
+  const allReplies = getAllReplies();
+  console.log(allReplies);
 
   $('body').append(`<style>.gpt-answer-wrap{background:#fffbd9;border-radius:5px;padding:10px;font-size:14px;color:#303030;margin:0;line-height:1.6;text-align:left}.aianswer{display:flex;outline:0;border:1px solid #eee;background:#ffe27d;color:#626262;padding:4px 10px;cursor:pointer;border-radius:3px}.gpt-answer-wrap .airegenerate{margin-top:6px;outline:0;border:1px solid #eee;background:#ffe27d;color:#626262;padding:4px 10px;cursor:pointer;border-radius:3px}.v2exaianswer{position:fixed;bottom:20px;right:20px;z-index:99999;max-width:400px;padding:20px;border:1px solid #ddd;border-radius:8px;box-shadow:0 2px 10px rgba(0,0,0,.1);background-color:#f9f9f9;display:none}.v2exaianswer input[type=text]{width:100%;padding:10px;margin:10px 0;border:1px solid #ccc;border-radius:4px;font-size:16px;transition:border-color .3s}.v2exaianswer input[type=text]:focus{border-color:#007bff;outline:0}.v2exaianswer button{width:100%;padding:10px;background-color:#007bff;color:#fff;border:none;border-radius:4px;font-size:16px;cursor:pointer;transition:background-color .3s}.v2exaianswer button:hover{background-color:#0056b3}.gpt-answer {
     white-space: pre-line;
