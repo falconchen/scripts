@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         v2ex AI 回答问题
 // @namespace    https://github.com/falconchen/scripts
-// @version      0.1.0
-// @description  自定义 api key 等信息，实现 AI 回答 v2ex 帖子中的问题，会保留缓存记录到本地避免大量消耗 token。
+// @version      0.1.1
+// @description  实现 AI 回答 v2ex 帖子中的问题，可使用 deepseek 或其他与openai api对齐的LLM，会保留缓存记录到本地避免大量消耗 token。从 https://github.com/dlzmoe/scripts的v2ex AI 总结帖子脚本 修改而来
 // @author       falconchen
 // @match        *://v2ex.com/*
 // @match        *://*.v2ex.com/*
@@ -17,6 +17,8 @@
 // @grant        GM_info
 // @icon         data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAOGVYSWZNTQAqAAAACAABh2kABAAAAAEAAAAaAAAAAAACoAIABAAAAAEAAAAgoAMABAAAAAEAAAAgAAAAAI9OQMkAAARKSURBVHicrVe7SzNLFP/t7CObbEg0WliJooUxcAsfYKFW2lh8NhdLwUIsbMTCBG3EIoid4J/xNd9t7ZSAIiJcNaSIYBcbNVlMsq/M3MK762YziVE8EGbYOTnnd55zRsD/xBiT7+/vf+u6vlir1VTLskApFfADRAhhiqIgEokYsVjsNJVK/S0Igg0AAgAUCoW/np+fr15fX5WfUPgZ9fT0WP39/dNjY2P/SowxOZfLXZXLZUVRFIyPjyORSCAUCkEQmh3AGIMgCGCMAYC3D/IFiVIKy7Lw8vKCfD6PcrmsALhijEWFu7u7P4+Pj78URcHMzAyi0WjXCoPnQeLxV6tVXFxcwLIsDA0N/UN0XV8EgGQyCU3TQClFo9FAo9EAY8xb/Xv33OWllIJSCsaYt/L4GWPQNA3JZBIAoOv6olSr1VQASCQS3h/9FgWtC54FPcDbB2UkEgkAQK1WUyXLsgAAiqK0MFNKIQgCKKVcl3ajMChPFEXIsgwAsCwLkltq/jh1K/C7RAhxAQmSX3DQwo2NDZydnbWcu4D9vKFQCNvb21hdXfUU8ZIwaIQHwD3w50Aul/PQflZyjuPg6OgIoVAIKysrbRUGc6wFgH8lhLRV2K4Es9ksotEolpaWuuobTSEAPhIPACSpCV/XtL+/D03TMD8/3ySP5xHiB+BnYIxBFEUQQkAI8faiKHJ/fh7GGPb29nB9fd0kryOAIBAXgCRJkCQJhBBv5QGSJKmJ33EcpNNp5PP5JpnBkHXMgcvLy65cXiqVsLm5iaenp6bvpmkinU7j+PgYw8PD3BJuCgEAr+kEAXXqCQMDAzg5OUFfX19LaN7e3pDJZGDbNtcLXA+4ICzL6nj5uHu3WtwwBIn3rQVAJws/6/WlUgmZTAa6rnvKXHDxeByHh4cghHgXFRcAT8Hy8nLXVy/P0nA4jGw2i8HBQTiO09kDfgD+PvDdWUCWZRwcHGB0dBTuhcczkhsCfyfslvwACSHY3d1FKpXy8oinvAlAEATw7tLPEjB4DgBbW1uYnJyEYRhfb8V+hJ0AtPPA+vo6ZmdnYZpmizy3urruhFNTU17n83dDf9dz6z0cDmNtbQ0LCwswDKNpNON1QK4Hgi7a2dnh/qkdMcZgmmbbCYo7DxBCGKVU4CWh/ybjCQwqNwyD2zWDSdhoNAC8P1gkWZZhmiYsy4KiKCCEeAz1ev1LpfdZqYqiCMaY1xNkWQZRVdUAgHK5/PHxY2bzVv/eb43fa/7RPMhPCPGGUVeXqqqGFI1GTyuVyq9isQhN0xCJRBAKhbqy8KvE2PvDpFgsAgA0TTsVGGPy+fn5m67riizLGBkZQTweh6Io31YUJEopbNtGpVLBw8MDbNtGLBaz5ubmopIgCPbt7e00gCtd15VCofAjSjtRLBazent7pwVBsD0TGWPyzc3N72q1uliv11XHcX70eS7LMlRVNSKRyOnExIT3PP8P91unlxYYZf4AAAAASUVORK5CYII=
 // @license      Apache-2.0 license
+// @downloadURL https://update.greasyfork.org/scripts/506898/v2ex%20AI%20%E5%9B%9E%E7%AD%94%E9%97%AE%E9%A2%98.user.js
+// @updateURL https://update.greasyfork.org/scripts/506898/v2ex%20AI%20%E5%9B%9E%E7%AD%94%E9%97%AE%E9%A2%98.meta.js
 // ==/UserScript==
 
 (function () {
@@ -50,7 +52,7 @@
     });
 
     menu_ID[menu_ID.length] = GM_registerMenuCommand('💬 建议与反馈！', function () {
-      window.GM_openInTab("https://github.com/dlzmoe/scripts", {
+      window.GM_openInTab("https://github.com/falconchen/scripts", {
         active: true,
         insert: true,
         setParent: true
