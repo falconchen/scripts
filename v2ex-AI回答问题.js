@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         v2ex AI 回答问题
 // @namespace    https://github.com/falconchen/scripts
-// @version      0.1.1
+// @version      0.1.2
 // @description  实现 AI 回答 v2ex 帖子中的问题，可使用 deepseek 或其他与openai api对齐的LLM，会保留缓存记录到本地避免大量消耗 token。从 https://github.com/dlzmoe/scripts的v2ex AI 总结帖子脚本 修改而来
 // @author       falconchen
 // @match        *://v2ex.com/*
@@ -173,7 +173,7 @@
 2. 提供一个全面、有见地且有帮助的回答
 3. 如果有多个问题,请逐一回答
 4. 如果问题不明确,请尝试理解潜在的意图并给出最佳回答
-5. 回答应该详细、准确,并尽可能提供有用的信息或建议
+5. 回答应该简洁、准确,并尽可能提供有用的信息或建议
 
 请用简体中文回答。不要重复问题,直接给出回答。
 
